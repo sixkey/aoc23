@@ -9,6 +9,7 @@ from typing import Callable, Any
 
 ### misc. decorator stuff #####################################################
 
+
 def named_function( name: str ):
     def named_function_d( fun ):
         setattr( fun, "__name__", name )
@@ -16,17 +17,22 @@ def named_function( name: str ):
         return fun
     return named_function_d
 
+
 ### str #######################################################################
+
 
 def lpad( string, chars, padding_char = " " ):
     if not isinstance( string, str ):
         string = str( string )
     return padding_char * ( chars - len( string ) ) + string
 
+
 ### aoc #######################################################################
+
 
 def aoc_filename( year: int, day: int ):
     return "data/{year}_{ lpad( day, 2, padding_char = '0' ) }.txt"
+
 
 def aoc_get_input( day: int, year: int, cookie, overwrite: bool = False ):
     filename = aoc_filename( year, day )
@@ -69,15 +75,18 @@ def _aoc_problem( year ):
             print( result )
     return aoc_problem_d
 
+
 def aoc_problem( arg ):
     if isinstance( arg, int ):
         return _aoc_problem( arg )
     else:
         return _aoc_problem( 2023 )( arg )
 
+
 def aoc_test( fun ):
     for result in fun( "test.txt" ):
         print( result )
+
 
 def gbrick( fun ):
     @named_function( fun.__name__ )
@@ -89,6 +98,7 @@ def gbrick( fun ):
         return gbrick_f_b
     return gbrick_f
 
+
 def decorify_gbrick( gbrick ):
     @named_function( "d_" + gbrick.__name__ )
     def gbrick_w( *args ):
@@ -99,20 +109,25 @@ def decorify_gbrick( gbrick ):
         return gbrick_d
     return gbrick_w
 
+
 ### decorators ################################################################
+
 
 @gbrick
 def gmap( fun, gen ):
     for element in gen:
         yield fun( element )
 
+
 d_gmap = decorify_gbrick( gmap )
+
 
 def d_with_file( fun ):
     def with_file_f( filename: str ):
         with open( filename, "r" ) as f:
             yield from fun( f )
     return with_file_f
+
 
 @gbrick
 def blocks( num: int, gen ):
@@ -125,7 +140,9 @@ def blocks( num: int, gen ):
         buffer.append( line )
     yield tuple( buffer )
 
+
 d_blocks = decorify_gbrick( blocks )
+
 
 def cast_to( constructor, element ):
     if isinstance( element, tuple ):
@@ -133,19 +150,24 @@ def cast_to( constructor, element ):
     else:
         return constructor( element )
 
+
 @gbrick
 def g_cast_to( constructor, gen ):
     for element in gen:
         yield cast_to( constructor, element )
 
+
 d_cast_to = decorify_gbrick( g_cast_to )
 
+
 ###############################################################################
+
 
 def d_stream( list ):
     def d_stream_d( fun ):
         yield from fun( list )
     return d_stream_d
+
 
 def d_collect( constructor ):
     def d_collect_d( fun ):
