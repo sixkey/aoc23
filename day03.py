@@ -1,4 +1,0 @@
-from aoc import *
-
-
-
