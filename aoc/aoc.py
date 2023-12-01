@@ -6,6 +6,8 @@ import os.path
 import re
 import requests
 from typing import Callable, Any
+from .utils import lpad
+import numpy as np
 
 ### misc. decorator stuff #####################################################
 
@@ -32,8 +34,8 @@ def digits( number, base = 10 ):
 ### aoc #######################################################################
 
 
-def aoc_filename( year: int, day: int ):
-    return f"data/{year}_{ lpad( day, 2, padding_char = '0' ) }.txt"
+def aoc_filename( year: int, day: int, suffix = "" ):
+    return f"data/{year}_{ lpad( day, 2, padding_char = '0' ) }{suffix}.txt"
 
 
 def aoc_get_input( day: int, year: int, cookie, overwrite: bool = False ):
@@ -79,12 +81,30 @@ def _get_day( filename: str ):
     return int( m.group(1) )
 
 
-def aoc_problem( *args ):
+def _aoc_problem_dispatch( fun, *args ):
     day = _get_day( argv[ 0 ] ) if len( args ) <= 1 else args[ 1 ]
     if isinstance( args[ 0 ], int ):
-        return _aoc_problem( args[ 0 ], day  )
+        return fun( args[ 0 ], day  )
     else:
-        return _aoc_problem( 2023, day )( args[ 0 ] )
+        return fun( 2023, day )( args[ 0 ] )
+
+
+def aoc_problem( *args ):
+    return _aoc_problem_dispatch( _aoc_problem, *args )
+
+
+def _aoc_problem_test( year, day ):
+    def _aoc_problem_test( fun ):
+        filename = aoc_filename( year, day, "_test" )
+        if not os.path.exists( filename ):
+            raise RuntimeError( f"file {filename} does not exists" )
+        for result in fun( filename ):
+            print( result )
+    return _aoc_problem_test
+
+
+def aoc_problem_test( *args ):
+    return _aoc_problem_dispatch( _aoc_problem_test, *args )
 
 
 def aoc_test( fun ):
@@ -183,3 +203,9 @@ def d_collect( constructor ):
             yield from fun( constructor( gen ) )
         return d_collect_w
     return d_collect_d
+
+
+###############################################################################
+
+
+def vec( *args ): return np.array( list( args ) )
