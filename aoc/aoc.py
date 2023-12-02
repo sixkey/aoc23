@@ -84,7 +84,7 @@ def _get_day( filename: str ):
 def _aoc_problem_dispatch( fun, *args ):
     day = _get_day( argv[ 0 ] ) if len( args ) <= 1 else args[ 1 ]
     if isinstance( args[ 0 ], int ):
-        return fun( args[ 0 ], day  )
+        return fun( args[ 0 ], day )
     else:
         return fun( 2023, day )( args[ 0 ] )
 

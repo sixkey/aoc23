@@ -275,6 +275,10 @@ def tlines( filename: str ):
 
 
 @tpipe
+def tbimap( tensor, left, right ):
+    return tmap( lambda e: [ left(e[0]), right(e[1]) ] )( tensor )
+
+@tpipe
 def tmap( tensor, fun, depth = 1 ):
     return deepmap( tensor, fun, depth )
 
@@ -369,9 +373,6 @@ def draw_tensor( tensor ):
         draw_line( depth, "]" )
 
     draw_tensor_go( tensor, 0 )
-
-
-
 
 def draw_matrix( matrix, hor_delim = "", ver_delim = "\n", lpad_val = None ):
     if matrix.dim() != 2: raise RuntimeError( f"dimension of {matrix} is {matrix.dim()} not 2" )

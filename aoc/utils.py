@@ -1,6 +1,11 @@
 ### str #######################################################################
 
 
+from functools import reduce
+from operator import __and__
+import re
+
+
 def lpad( string, chars, padding_char = " " ):
     if not isinstance( string, str ):
         string = str( string )
@@ -45,3 +50,31 @@ def dict_concat( *args ):
     for arg in args:
         result.update( arg )
     return result
+
+def list_concat( *args ):
+    result = []
+    for arg in args:
+        result += arg
+    return result
+
+def kall( *args ):
+    if len( args ) == 1:
+        return reduce( __and__, args[ 0 ], True )
+    return reduce( __and__, args, True )
+
+def kmatch( pattern ):
+    re_pattern = re.compile( pattern )
+    def kmatch_d( fun ):
+        def kmatch_w( string ):
+            result = re_pattern.match( string )
+            if result is None:
+                return None
+            return fun( *result.groups() )
+        return kmatch_w
+    return kmatch_d
+
+def ksnd( x ):
+    return x[1]
+
+def kfst( x ):
+    return x[1]
