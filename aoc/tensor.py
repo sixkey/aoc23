@@ -1,8 +1,9 @@
 from __future__ import annotations
 import functools
+from itertools import repeat, islice
 
 from typing import Iterable, Union
-from copy import copy
+from copy import copy, deepcopy
 from .utils import lpad
 
 def _shape_sizes( shape ):
@@ -12,7 +13,7 @@ def _shape_sizes( shape ):
         sizes.append( size )
         size *= s
     sizes.reverse()
-    return sizes
+    return sizes, size
 
 
 def indexify( index ):
@@ -66,9 +67,14 @@ class Tensor( Iterable ):
 
 
     def __init__( self, elements, shape = None ):
-        self.elements = list( elements )
-        self.shape = shape if shape is not None else (len(self.elements),)
-        self._shape_sizes = _shape_sizes( self.shape )
+        if shape is None:
+            self.elements = list( elements )
+            self.shape = (len(self.elements),)
+            self._shape_sizes, self.size = _shape_sizes( self.shape )
+        else:
+            self.shape = shape
+            self._shape_sizes, self.size = _shape_sizes( self.shape )
+            self.elements = list( islice( elements, self.size ) )
 
 
     def dim( self ):
@@ -89,6 +95,18 @@ class Tensor( Iterable ):
         if len( index ) > len( self.shape ):
             return self.elements[ real_index ][ index[ len( self.shape ): ] ]
         return self.elements[ real_index ]
+
+    def __setitem__( self, index, value ):
+        index = indexify( index )
+        real_index = 0
+        for i, s in zip( index, self._shape_sizes ):
+            real_index += i * s
+        if len( index ) < len( self.shape ):
+            raise RuntimeError( "cannot assign to matrix without full depth" )
+        if len( index ) > len( self.shape ):
+            self.elements[ real_index ][ index[ len( self.shape ): ] ] = value
+        else:
+            self.elements[ real_index ] = value
 
 
     def iter( self, depth ):
@@ -228,12 +246,13 @@ class TensorIterator:
             self.increment_index()
             return item
 
-        if not isinstance( item, TensorT ):
-            raise RuntimeError( f"cannot iterate element {item}" )
-
         self.increment_index()
         self.child_iterator = deep_iterator( item, self.child_depth )
         return next( self )
+
+def tensor_like( tensor, default_value, depth ):
+    tcopy = deepcopy( tensor )
+    return Tensor( repeat( default_value ), shape = tensor.shape[:depth] )
 
 
 def deepmap( item, fun, depth ):
@@ -393,3 +412,9 @@ def with_tensor_chain( *chain ):
     return with_tensor_chain_d
 
 
+@tpipe
+def tomat( tensor ):
+    tensor.shape[ 0 ]
+    elements = list( tensor( 2 ) )
+    assert len( elements ) % tensor.shape[ 0 ] == 0
+    return Tensor( elements, ( tensor.shape[ 0 ], len( elements ) // tensor.shape[ 0 ] ) )

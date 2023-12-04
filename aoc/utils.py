@@ -2,8 +2,9 @@
 
 
 from functools import reduce
+from itertools import chain
 from operator import __and__
-import re
+import regex
 
 
 def lpad( string, chars, padding_char = " " ):
@@ -62,14 +63,17 @@ def kall( *args ):
         return reduce( __and__, args[ 0 ], True )
     return reduce( __and__, args, True )
 
-def kmatch( pattern ):
-    re_pattern = re.compile( pattern )
+def kmatch( pattern, capture = None ):
+    re_pattern = regex.compile( pattern )
     def kmatch_d( fun ):
         def kmatch_w( string ):
             result = re_pattern.match( string )
             if result is None:
                 return None
-            return fun( *result.groups() )
+            if capture is None:
+                return fun( result.groups )
+            else:
+                return fun( *( result.captures(i) for i in capture ) )
         return kmatch_w
     return kmatch_d
 
@@ -78,3 +82,28 @@ def ksnd( x ):
 
 def kfst( x ):
     return x[1]
+
+def eight_neighbours( y, x, miny = None, maxy = None, minx = None, maxx = None ):
+    def _go():
+        yield y - 1, x - 1
+        yield y - 1, x
+        yield y - 1, x + 1
+        yield y, x - 1
+        yield y, x + 1
+        yield y + 1, x - 1
+        yield y + 1, x
+        yield y + 1, x + 1
+    def in_box( yy, xx ):
+        return ( ( minx is None or minx <= xx )
+             and ( maxx is None or xx <= maxx )
+             and ( miny is None or miny <= yy )
+             and ( maxy is None or yy <= maxy ) )
+    for yy, xx in _go():
+        if in_box( yy, xx ):
+            yield yy, xx
+
+
+def kjoin( s ):
+    def fun( *args ):
+        return s.join( chain( *( map( lambda x: str( x ), arg ) for arg in args ) ) )
+    return fun
